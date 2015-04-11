@@ -30,12 +30,23 @@ import java.io.InputStreamReader;
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
 import Uploader.ApplicationUtil;
 import Uploader.Unzipper;
+import Uploader.UploadMessageStatus;
 import Uploader.UploadToSFTP;
+
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class UI extends JFrame implements Runnable{
 	private JTextField zipPath;
@@ -45,13 +56,20 @@ public class UI extends JFrame implements Runnable{
 	final JCheckBox youTube;
 	final JCheckBox google;
 	JButton upload;
+	JButton clear;
 	public static JLabel totalUploadLabel;
 	public static JLabel error;
 	JLabel uploadStatus;
+	public static JProgressBar progressBar;
+	public static JLabel totalUploadForLabel ;
 	static UI frame;
+	public static DefaultTableModel defaultTableModel;
 	public static String msg="";
 	public static int errorCount=0;
 	public static int totalUpload=0;
+	private JTable table;
+	private JLabel lblCopyright;
+	private JLabel label;
 	public static void main(String[] args) {
 	frame = new UI();
 
@@ -59,10 +77,11 @@ public class UI extends JFrame implements Runnable{
 
 	public UI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(300, 200, 733, 520);
+		setBounds(200, 50, 900, 540);
 		getContentPane().setLayout(null);
 
 		JButton buttonSelectZip = new JButton("Select Zip");
+		buttonSelectZip.setForeground(Color.DARK_GRAY);
 		buttonSelectZip.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String initialPath = System.getProperty("user.dir");
@@ -77,6 +96,7 @@ public class UI extends JFrame implements Runnable{
 				case JFileChooser.APPROVE_OPTION:
 					File file = fc.getSelectedFile();
 					zipPath.setText(file.toString());
+					zipPath.setForeground(Color.black);
 					break;
 				case JFileChooser.CANCEL_OPTION:
 				case JFileChooser.ERROR_OPTION:
@@ -85,28 +105,55 @@ public class UI extends JFrame implements Runnable{
 
 			}
 		});
-		buttonSelectZip.setBounds(115, 118, 127, 25);
+		buttonSelectZip.setBounds(39, 103, 127, 25);
 		getContentPane().add(buttonSelectZip);
 
-		zipPath = new JTextField();
+		zipPath = new JTextField("Choose ZIP File...");
+		zipPath.setForeground(Color.LIGHT_GRAY);
+		zipPath.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				String initialPath = System.getProperty("user.dir");
+				JFileChooser fc = new JFileChooser(initialPath);
+				// fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						"Zip", "zip");
+				fc.setFileFilter(filter);
+				int result = fc.showOpenDialog(null);
+				switch (result) {
+				case JFileChooser.APPROVE_OPTION:
+					File file = fc.getSelectedFile();
+					zipPath.setText(file.toString());
+					zipPath.setForeground(Color.black);
+					break;
+				case JFileChooser.CANCEL_OPTION:
+				case JFileChooser.ERROR_OPTION:
+					break;
+				}
+
+			}
+		});
+		
 		zipPath.setFont(new Font("Serif", Font.BOLD, 13));
-		zipPath.setBounds(254, 117, 348, 27);
+		zipPath.setBounds(178, 102, 348, 27);
 		getContentPane().add(zipPath);
 		zipPath.setColumns(10);
 
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.DARK_GRAY);
-		panel.setBounds(0, 0, 733, 70);
+		panel.setBounds(0, 0, 888, 70);
 		panel.setLayout(null);
 		getContentPane().add(panel);
 
 		JLabel lblDiscas = new JLabel("DiSCAS");
 		lblDiscas.setFont(new Font("Dialog", Font.BOLD, 24));
 		lblDiscas.setForeground(Color.WHITE);
-		lblDiscas.setBounds(331, 12, 196, 46);
+		lblDiscas.setBounds(392, 12, 196, 46);
 		panel.add(lblDiscas);
 
 		JButton buttonFS = new JButton("Select Folder");
+		buttonFS.setForeground(Color.DARK_GRAY);
 		buttonFS.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String initialPath = System.getProperty("user.dir");
@@ -118,6 +165,7 @@ public class UI extends JFrame implements Runnable{
 				case JFileChooser.APPROVE_OPTION:
 					File file = fc.getSelectedFile();
 					path.setText(file.toString());
+					path.setForeground(Color.black);
 					break;
 				case JFileChooser.CANCEL_OPTION:
 				case JFileChooser.ERROR_OPTION:
@@ -126,35 +174,61 @@ public class UI extends JFrame implements Runnable{
 
 			}
 		});
-		buttonFS.setBounds(115, 155, 127, 25);
+		buttonFS.setBounds(39, 140, 127, 25);
 		getContentPane().add(buttonFS);
 
-		path = new JTextField();
+		path = new JTextField("Select Resources Folder");
+		path.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				String initialPath = System.getProperty("user.dir");
+				JFileChooser fc = new JFileChooser(initialPath);
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				// fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				int result = fc.showOpenDialog(null);
+				switch (result) {
+				case JFileChooser.APPROVE_OPTION:
+					File file = fc.getSelectedFile();
+					path.setText(file.toString());
+					path.setForeground(Color.black);
+					break;
+				case JFileChooser.CANCEL_OPTION:
+				case JFileChooser.ERROR_OPTION:
+					break;
+				}
+
+			}
+		});
+		path.setForeground(Color.LIGHT_GRAY);
 		path.setFont(new Font("Serif", Font.BOLD, 13));
 		path.setColumns(10);
-		path.setBounds(254, 154, 348, 27);
+		path.setBounds(178, 139, 348, 27);
 		getContentPane().add(path);
 
 		youTube = new JCheckBox("YouTube");
-		youTube.setBounds(354, 206, 99, 23);
+		youTube.setForeground(Color.DARK_GRAY);
+		youTube.setBounds(267, 191, 99, 23);
 		getContentPane().add(youTube);
 
 		google = new JCheckBox("Google");
-		google.setBounds(265, 206, 83, 23);
+		google.setForeground(Color.DARK_GRAY);
+		google.setBounds(178, 191, 83, 23);
 		getContentPane().add(google);
 
 		googleIndia = new JCheckBox("Google India");
-		googleIndia.setBounds(457, 206, 145, 23);
+		googleIndia.setForeground(Color.DARK_GRAY);
+		googleIndia.setBounds(370, 191, 145, 23);
 		getContentPane().add(googleIndia);
 
 		upload = new JButton("Upload");
-		upload.setBounds(262, 259, 117, 25);
+		upload.setForeground(Color.DARK_GRAY);
+		upload.setBounds(178, 234, 99, 25);
 
 		getContentPane().add(upload);
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(12, 340, 709, 149);
-		getContentPane().add(scrollPane);
+		//getContentPane().add(scrollPane);
 		
 		status = new JTextArea();
 		status.setForeground(new Color(128, 128, 128));
@@ -163,28 +237,94 @@ public class UI extends JFrame implements Runnable{
 		status.setEditable(false);
 		
 		uploadStatus = new JLabel("Status");
-		uploadStatus.setBounds(21, 320, 290, 15);
+		uploadStatus.setForeground(Color.DARK_GRAY);
+		uploadStatus.setBounds(22, 444, 290, 15);
 		getContentPane().add(uploadStatus);
 		
-		JButton clear = new JButton("Clear");
+		clear = new JButton("Clear");
 		clear.setFont(new Font("Dialog", Font.BOLD, 11));
 		clear.setForeground(new Color(0, 0, 0));
 		clear.setBackground(Color.LIGHT_GRAY);
 		clear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				status.setText("");
+				for(int i=0;i<defaultTableModel.getRowCount();i++){
+					for(int j=0;j<defaultTableModel.getRowCount();j++){
+						defaultTableModel.removeRow(j);
+					}
+					
+				}
+				progressBar.setValue(0);
+				uploadStatus.setText("Status: ");
+				totalUploadForLabel.setText("");
+				error.setText("Error: 0");
 			}
 		});
-		clear.setBounds(653, 319, 68, 16);
+		clear.setBounds(820, 444, 68, 16);
 		getContentPane().add(clear);
 		
 		error = new JLabel("Error: 0");
-		error.setBounds(532, 320, 103, 15);
+		error.setForeground(Color.DARK_GRAY);
+		error.setBounds(538, 444, 103, 15);
 		getContentPane().add(error);
 		
 		totalUploadLabel = new JLabel("Total Upload: 0");
-		totalUploadLabel.setBounds(265, 320, 164, 15);
+		totalUploadLabel.setForeground(Color.DARK_GRAY);
+		totalUploadLabel.setBounds(319, 444, 164, 15);
 		getContentPane().add(totalUploadLabel);
+		
+	 defaultTableModel=new DefaultTableModel();
+//		defaultTableModel.addColumn("SNO");
+		defaultTableModel.addColumn("Upload For");
+		defaultTableModel.addColumn("Process Folder");
+
+		defaultTableModel.addColumn("File Name");
+		defaultTableModel.addColumn("User Name");
+		defaultTableModel.addColumn("Host");
+		defaultTableModel.addColumn("Current Status");
+
+	
+	
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(12, 296, 876, 146);
+		getContentPane().add(scrollPane_1);
+		
+				table = new JTable(defaultTableModel);
+				table.setFont(new Font("Serif", Font.BOLD, 12));
+				table.setRowHeight(30);
+				scrollPane_1.setViewportView(table);
+				
+				 progressBar = new JProgressBar();
+				progressBar.setBounds(644, 444, 148, 14);
+		
+				progressBar.setBorderPainted(true);
+				getContentPane().add(progressBar);
+				
+				totalUploadForLabel = new JLabel("              ");
+				totalUploadForLabel.setForeground(Color.GRAY);
+				totalUploadForLabel.setFont(new Font("Dialog", Font.BOLD, 11));
+				totalUploadForLabel.setBounds(691, 458, 70, 15);
+				getContentPane().add(totalUploadForLabel);
+				
+				JPanel footer = new JPanel();
+				footer.setBounds(0, 503, 927, 27);
+				footer.setLayout(null);
+				footer.setBackground(Color.DARK_GRAY);
+				getContentPane().add(footer);
+				
+				lblCopyright = new JLabel("POWERED BY:- TTN DIGITAL");
+				lblCopyright.setFont(new Font("Dialog", Font.ITALIC, 10));
+				lblCopyright.setBounds(740, 5, 200, 15);
+				lblCopyright.setForeground(Color.white);
+				footer.add(lblCopyright);
+				
+				label = new JLabel("All Right Reserved");
+				label.setFont(new Font("Dialog", Font.ITALIC, 10));
+				label.setBounds(12, 5, 200, 15);
+				footer.add(label);
+				label.setForeground(Color.WHITE);
+		
 		upload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -198,13 +338,14 @@ public class UI extends JFrame implements Runnable{
 	}
 	public void run()
 	{
-		totalUpload=0;
-		errorCount=0;
+		UploadMessageStatus.totalUpload=0;
+		UploadMessageStatus.errorCount=0;
 		
 		uploadStatus.setText("Status: in progress..");
-		totalUploadLabel.setText("Total Upload: "+totalUpload);
-		error.setText("Error: "+errorCount);
+		totalUploadLabel.setText("Total Upload: "+	UploadMessageStatus.totalUpload);
+		error.setText("Error: "+	UploadMessageStatus.errorCount);
 		boolean isSelectedUploader = false;
+
 		String[] uploadFor = new String[50];
 		int index = 0;
 		if (google.isSelected()) {
@@ -228,12 +369,14 @@ public class UI extends JFrame implements Runnable{
 					"Please Select The Upload For", "Message",
 					JOptionPane.INFORMATION_MESSAGE);
 		} else {
+			clear.setEnabled(false);
 			upload.setEnabled(false);
+			progressBar.setValue(0);
 			String zip = zipPath.getText();
 			String destination = "/tmp/ddexTool/";
 			Unzipper uz = new Unzipper(zip, destination);
 			uz.extract();
-
+			
 			String folderPath = path.getText();// Resource Folder
 
 			UploadToSFTP uploadToSFTP = new UploadToSFTP();
@@ -245,10 +388,16 @@ public class UI extends JFrame implements Runnable{
 			String destinationFileName = "";
 			File copyXMLSourceToDestination = null;
 			for (int i=0;i<index;i++) {
-				
+				//JOptionPane.showMessageDialog(null, getTotalResourceForProgressBar(destinationFile)+" I");
+				uploadToSFTP.progressCount=0;
+				progressBar.setValue(0);
 				for (File file : destinationFile.listFiles()) {
-					uploadStatus.setText("Status: Uploading on "+uploadFor[i]);
+					UploadMessageStatus.uploadFor=uploadFor[i];
+					
+					totalUploadForLabel.setText((i+1)+" of "+index);
+					uploadStatus.setText("Status: Uploading on "+UploadMessageStatus.uploadFor);
 					if (file.isDirectory()) {
+						
 						sourceXMLFile = new File("/tmp/ddexTool/"+uploadFor[i]+"/"); 
 						destinationFileName = file.getName();
 						for (File source : sourceXMLFile.listFiles()) {
@@ -276,27 +425,66 @@ public class UI extends JFrame implements Runnable{
 										createBatchFile.delete();
 									}
 									createBatchFile.createNewFile();
-									uploadToSFTP.setUploadForConfigration(uploadFor[i]);
 									
+									uploadToSFTP.setUploadForConfigration(uploadFor[i]);
+								
+									UploadMessageStatus.hostName=uploadToSFTP.hostName;
+									UploadMessageStatus.userName=uploadToSFTP.userName;
+									UploadMessageStatus.processFolderName=file.getName();
+									
+									progressBar.setMaximum(getTotalResourceForProgressBar(destinationFile));
 									uploadToSFTP.transferToSFTP(file.getAbsolutePath());
 									
 									uploadToSFTP.transferToSFTP(file.getAbsolutePath() + "/resources");
 									createBatchFile.delete();
 									copyXMLSourceToDestination.delete();
 								} catch (Exception e) {
-									JOptionPane.showMessageDialog(null,e.getMessage());
+									JOptionPane.showMessageDialog(null,e.getMessage()+" UI ");
 								}
 
 							}
 						}
 					}
 				}
-			
+				uploadToSFTP.progressCount=0;
 			}
 			upload.setEnabled(true);
-			error.setText("Error: "+errorCount);
-			totalUploadLabel.setText("Total Upload: "+totalUpload);
-			uploadStatus.setText("Upload Status: Finish");
+			clear.setEnabled(true);
+			
+			error.setText("Error: "+UploadMessageStatus.errorCount);
+			totalUploadLabel.setText("Total Upload: "+UploadMessageStatus.totalUpload);
+			UploadMessageStatus.currentStaus="Finish";
+			uploadStatus.setText("Upload Status: "+UploadMessageStatus.currentStaus);
 		}
+	}
+	public static int getTotalResourceForProgressBar(File file)
+	{
+		int totalFile=0;
+		int totalTempFile=0;
+		File tempFile;
+		try{
+			for(File f:file.listFiles())
+			{
+				totalTempFile+=2;
+				totalFile=totalFile+countFile(new File(f.getAbsolutePath()+File.separator+"resources"));
+				//JOptionPane.showMessageDialog(null,f.getAbsolutePath()+File.separator+"resources");
+			}
+		}
+		catch(Exception e){
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+		return totalFile+totalTempFile;
+	}
+	public static int countFile(File file){
+		int totalFile=0;
+		try{
+			for(File iterate:file.listFiles()){
+				totalFile++;
+			}
+		}
+		catch(Exception e){
+			
+		}
+		return totalFile;
 	}
 }

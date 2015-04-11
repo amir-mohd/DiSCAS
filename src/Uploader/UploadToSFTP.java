@@ -15,13 +15,13 @@ import org.apache.commons.vfs.provider.sftp.SftpFileSystemConfigBuilder;
 
 public class UploadToSFTP {
 
-	String hostName;
-	String userName;
-	String password;
-	String port;
-	String remoteFilePath;
-	String keyFilePath;
-
+	public String hostName;
+	public String userName;
+	public String password;
+	public String port;
+	public String remoteFilePath;
+	public String keyFilePath;
+	public static int progressCount=0;
 	public boolean transferToSFTP(String localFilePath) {
 
 		upload(hostName, userName, password, localFilePath, port,remoteFilePath, keyFilePath);
@@ -33,10 +33,26 @@ public class UploadToSFTP {
 		File uploadDir = new File(localFilePath);
 		String resourceParentFolderName;
 		StandardFileSystemManager manager = new StandardFileSystemManager();
-	
+	/*	int totalFileInFolder=0;
+		int progressCount=0;
+		totalFileInFolder = uploadDir.listFiles().toString().length();
+		UI.progressBar.setMaximum(totalFileInFolder);*/
 		for (File file : uploadDir.listFiles()) {
 			try {
+				
+				
+				UI.defaultTableModel.addRow(new Object[] {
+						UploadMessageStatus.uploadFor,
+						UploadMessageStatus.processFolderName,
+						"",
+						UploadMessageStatus.userName,
+						UploadMessageStatus.hostName
+				});
+				
+				
 				UI.status.setText(UI.status.getText()+"\n"+file.getName()+" Under Process for "+username+"\n");
+				UI.defaultTableModel.setValueAt(file.getName(), UploadMessageStatus.totalProcessFile, 2);
+				UI.defaultTableModel.setValueAt("In Process", UploadMessageStatus.totalProcessFile, 5);
 				manager.init();
 				FileObject localFile = manager.resolveFile(file.getAbsolutePath());
 				FileObject remoteFile=null;
@@ -61,16 +77,20 @@ public class UploadToSFTP {
 				
 				remoteFile.createFolder();
 				remoteFile.copyFrom(localFile, Selectors.SELECT_SELF);
+				UI.defaultTableModel.setValueAt("Success", UploadMessageStatus.totalProcessFile, 5);
 				UI.status.setText(UI.status.getText()+"\n"+file.getName()+" Successfull Upload on "+username+"\n");
-				UI.totalUpload++;
-				UI.totalUploadLabel.setText("Total Upload: "+UI.totalUpload);
+				UploadMessageStatus.totalUpload++;
+				UI.totalUploadLabel.setText("Total Upload: "+UploadMessageStatus.totalUpload);
 			} catch (Exception e) {
-				UI.errorCount++;
-				UI.error.setText("Error: "+UI.errorCount);
+				UI.defaultTableModel.setValueAt("Error:--> "+e.getMessage(), UploadMessageStatus.totalProcessFile, 5);
+				UploadMessageStatus.errorCount++;
+				UI.error.setText("Error: "+UploadMessageStatus.errorCount);
 				UI.status.setText(UI.status.getText()+"\n"+e.getMessage()+"\n");
 
 			} finally {
 				manager.close();
+				UploadMessageStatus.totalProcessFile++;
+				UI.progressBar.setValue(++progressCount);
 			}
 		}
 	}
