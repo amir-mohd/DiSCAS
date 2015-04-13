@@ -12,6 +12,7 @@ public class ApplicationUtil {
         Integer month=now.get(Calendar.MONTH)+1;
         Integer day=now.get(Calendar.DAY_OF_MONTH);
         Integer hour=now.get(Calendar.HOUR_OF_DAY);
+        Integer minute=now.get(Calendar.MINUTE);
         folderName=year.toString();
         if(month<10){
             folderName=folderName+"0"+month;
@@ -30,6 +31,12 @@ public class ApplicationUtil {
         }
         else {
             folderName=folderName+hour;
+        }
+        if(minute<10){
+            folderName=folderName+"0"+minute;
+        }
+        else {
+            folderName=folderName+minute;
         }
         folderName=folderName+"00000";
         return folderName;

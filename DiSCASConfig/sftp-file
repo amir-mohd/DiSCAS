@@ -1,29 +1,7 @@
- hostName = qa3.intelligrape.net
- userName = discas_ftp
- password = igdefault
- port = 22
- remoteFilePath = home/discas_ftp
- keyFileName=discas_ftp.pem
 
-
-  googleHostName = qa3.intelligrape.net
-  googleUserName = discas_google
+  googleHostName = upload.partner.android.com
+  googleUserName = music-tangerine-digital-test
   googlePassword = igdefault
-  googlePort = 22
-  googleRemoteFilePath = home/discas_google
-  googleKeyFileName=discas_google.pem
-
-    googleIndiaHostName = qa3.intelligrape.net
-    googleIndiaUserName = discas_google_india
-    googleIndiaPassword = igdefault
-    googleIndiaPort = 22
-    googleIndiaRemoteFilePath = home/discas_google_india
-    googleIndiaKeyFileName=discas_google_india.pem
-
-
-    youTubeHostName = qa3.intelligrape.net
-    youTubeUserName = discas_youtube
-    youTubePassword = igdefault
-    youTubePort = 22
-    youTubeRemoteFilePath = home/discas_youtube
-    youTubeKeyFileName=discas_youtube.pem
+  googlePort = 19321
+  googleRemoteFilePath = NewRelease/
+  googleKeyFileName=PrivateKey.ppk
