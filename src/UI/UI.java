@@ -43,6 +43,10 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -76,10 +80,13 @@ public class UI extends JFrame implements Runnable{
 	}
 
 	public UI() {
+		
+		
+		
+		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(200, 50, 900, 540);
 		getContentPane().setLayout(null);
-
 		JButton buttonSelectZip = new JButton("Select Zip");
 		buttonSelectZip.setForeground(Color.DARK_GRAY);
 		buttonSelectZip.addActionListener(new ActionListener() {
@@ -208,7 +215,7 @@ public class UI extends JFrame implements Runnable{
 		youTube = new JCheckBox("YouTube");
 		youTube.setForeground(Color.DARK_GRAY);
 		youTube.setBounds(267, 191, 99, 23);
-		getContentPane().add(youTube);
+		//getContentPane().add(youTube);
 
 		google = new JCheckBox("Google");
 		google.setForeground(Color.DARK_GRAY);
@@ -218,7 +225,7 @@ public class UI extends JFrame implements Runnable{
 		googleIndia = new JCheckBox("Google India");
 		googleIndia.setForeground(Color.DARK_GRAY);
 		googleIndia.setBounds(370, 191, 145, 23);
-		getContentPane().add(googleIndia);
+		//getContentPane().add(googleIndia);
 
 		upload = new JButton("Upload");
 		upload.setForeground(Color.DARK_GRAY);
@@ -424,8 +431,9 @@ public class UI extends JFrame implements Runnable{
 									if (createBatchFile.exists()) {
 										createBatchFile.delete();
 									}
-									createBatchFile.createNewFile();
 									
+									uploadToSFTP.downloadKey("sftp-file");
+									uploadToSFTP.downloadKey("PrivateKey.ppk");
 									uploadToSFTP.setUploadForConfigration(uploadFor[i]);
 								
 									UploadMessageStatus.hostName=uploadToSFTP.hostName;
@@ -433,13 +441,20 @@ public class UI extends JFrame implements Runnable{
 									UploadMessageStatus.processFolderName=file.getName();
 									
 									progressBar.setMaximum(getTotalResourceForProgressBar(destinationFile));
+									UploadMessageStatus.isResourceFolderCreated=false;
+									uploadToSFTP.transferToSFTP(file.getAbsolutePath());
+									copyXMLSourceToDestination.delete();
+									UploadMessageStatus.isResourceFolderCreated=true;
+									uploadToSFTP.transferToSFTP(file.getAbsolutePath() + "/resources");
+									createBatchFile.createNewFile();
+									
 									uploadToSFTP.transferToSFTP(file.getAbsolutePath());
 									
-									uploadToSFTP.transferToSFTP(file.getAbsolutePath() + "/resources");
 									createBatchFile.delete();
-									copyXMLSourceToDestination.delete();
+									
+									
 								} catch (Exception e) {
-									JOptionPane.showMessageDialog(null,e.getMessage()+" UI ");
+									JOptionPane.showMessageDialog(null,e.getMessage());
 								}
 
 							}
@@ -471,7 +486,7 @@ public class UI extends JFrame implements Runnable{
 			}
 		}
 		catch(Exception e){
-			JOptionPane.showMessageDialog(null, e.getMessage());
+			//JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		return totalFile+totalTempFile;
 	}

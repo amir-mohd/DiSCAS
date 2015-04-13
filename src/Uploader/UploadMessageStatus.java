@@ -10,4 +10,5 @@ public class UploadMessageStatus {
 	public static String fileName;
 	public static String processFolderName;
 	public static String currentStaus	;
+	public static boolean isResourceFolderCreated;
 }

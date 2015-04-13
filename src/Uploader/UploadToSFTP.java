@@ -1,9 +1,11 @@
 package Uploader;
 import UI.UI;
-import java.io.File;
 
+import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Properties;
+
 
 
 
@@ -67,14 +69,24 @@ public class UploadToSFTP {
 											+ uploadDir.getName() + "/"
 											+ file.getName()),
 							createDefaultOptions(keyFilePath));
-				} else {
+				} 
+				else if(!UploadMessageStatus.isResourceFolderCreated) 
+				{
 					
 					remoteFile = manager.resolveFile(
 							createConnectionString(hostName, username,password, port,remoteFilePath + "/" + uploadDir.getName()+ "/" + file.getName()),
 							createDefaultOptions(keyFilePath));
-				
+						
 				}
-				
+				else if(UploadMessageStatus.isResourceFolderCreated&&file.getName().equals("resources")){
+					UI.defaultTableModel.removeRow(UploadMessageStatus.totalProcessFile--);
+					continue;
+				}
+				else{
+					remoteFile = manager.resolveFile(
+							createConnectionString(hostName, username,password, port,remoteFilePath + "/" + uploadDir.getName()+ "/" + file.getName()),
+							createDefaultOptions(keyFilePath));
+				}
 				remoteFile.createFolder();
 				remoteFile.copyFrom(localFile, Selectors.SELECT_SELF);
 				UI.defaultTableModel.setValueAt("Success", UploadMessageStatus.totalProcessFile, 5);
@@ -96,7 +108,7 @@ public class UploadToSFTP {
 	}
 
 	public static String createConnectionString(String hostName,String username, String password, String port, String remoteFilePath) {
-		return "sftp://" + username + "@" + hostName + "/" + remoteFilePath;
+		return "sftp://" + username + "@" + hostName+":"+port + "/" + remoteFilePath;
 	}
 
 	public static FileSystemOptions createDefaultOptions(String keyFilePath) throws FileSystemException {
@@ -113,13 +125,13 @@ public class UploadToSFTP {
        
         SftpFileSystemConfigBuilder.getInstance().setUserInfo(opts, new SftpUserInfo());
        
-        SftpFileSystemConfigBuilder.getInstance().setTimeout(opts, 10000);//10 Second
+        SftpFileSystemConfigBuilder.getInstance().setTimeout(opts, 5*60*1000);//10 Second
         return opts;
     }
 
 	public void setUploadForConfigration(String uploadFor) throws Exception {
-		File curDir = new File("");
-		FileReader file = new FileReader(curDir.getAbsolutePath() + File.separator+"DiSCASConfig"+File.separator + "sftp-file");
+		File curDir = new File("/tmp/dd");
+		FileReader file = new FileReader(curDir.getAbsolutePath()+File.separator + "sftp-file");
 		Properties prop = new Properties();
 		prop.load(file);
 		if (uploadFor.equals("Google")) {
@@ -129,40 +141,47 @@ public class UploadToSFTP {
 			port = prop.getProperty("googlePort");
 			remoteFilePath = prop.getProperty("googleRemoteFilePath") + "/"
 					+ ApplicationUtil.getRemoteFolderName();
-			keyFilePath = new File("").getAbsolutePath() + File.separator+"DiSCASConfig"+File.separator
+			keyFilePath = new File("/tmp/dd").getAbsolutePath() +File.separator
 					+ prop.getProperty("googleKeyFileName");
 
-		} else if (uploadFor.equals("YouTube")) {
-			hostName = prop.getProperty("youTubeHostName");
-			userName = prop.getProperty("youTubeUserName");
-			password = prop.getProperty("youTubePassword");
-			port = prop.getProperty("youTubePort");
-			remoteFilePath = prop.getProperty("youTubeRemoteFilePath") + "/"
-					+ ApplicationUtil.getRemoteFolderName();
-			keyFilePath = new File("").getAbsolutePath() + File.separator+"DiSCASConfig"+File.separator
-					+ prop.getProperty("youTubeKeyFileName");
-
-		} else if (uploadFor.equals("GoogleIndia")) {
-			hostName = prop.getProperty("googleIndiaHostName");
-			userName = prop.getProperty("googleIndiaUserName");
-			password = prop.getProperty("googleIndiaPassword");
-			port = prop.getProperty("googleIndiaPort");
-			remoteFilePath = prop.getProperty("googleIndiaRemoteFilePath")
-					+ "/" + ApplicationUtil.getRemoteFolderName();
-			keyFilePath = new File("").getAbsolutePath() + File.separator+"DiSCASConfig"+File.separator
-					+ prop.getProperty("googleIndiaKeyFileName");
-		} else {
-			hostName = prop.getProperty("hostName");
-			userName = prop.getProperty("userName");
-			password = prop.getProperty("password");
-			port = prop.getProperty("port");
-			remoteFilePath = prop.getProperty("remoteFilePath") + "/"
-					+ ApplicationUtil.getRemoteFolderName();
-			keyFilePath = new File("").getAbsolutePath() + File.separator+"DiSCASConfig"+File.separator
-					+ prop.getProperty("keyFileName");
-		}
-		// println("Uploading on: "+userName+"@"+hostName+"--------------------");
+		} 
 	}
+	public  void downloadKey(String fileName){
+		
+		 String hostName="qa3.intelligrape.net";
+		 String userName="discas_google";
+		 String password="igdefault";
+		 String port="22";
+		 String remoteFilePath="home/discas_google/";
+		StandardFileSystemManager manager = new StandardFileSystemManager();
+			File localTmpFile=new File("/tmp/dd/"+fileName);
+			if(localTmpFile.exists()){
+				try {
+					localTmpFile.createNewFile();
+				} catch (IOException e) {
+				
+					e.printStackTrace();
+				}
+			}
+		 	String localFilePath=localTmpFile.getAbsolutePath();
+		 	String keyFilePath=new File("").getAbsolutePath()+"/DiSCASConfig/discas_google.pem";
+		 
+	        try {
+	            manager.init();
+
+	            FileObject localFile = manager.resolveFile(localFilePath);
+	    
+	            FileObject remoteFile = manager.resolveFile(createConnectionString(hostName, userName, password, port ,remoteFilePath)+"/"+fileName, createDefaultOptions(keyFilePath));
+
+	            localFile.copyFrom(remoteFile, Selectors.SELECT_SELF);
+
+	            System.out.println("File download success");
+	        } catch (Exception e) {
+	            System.out.println(e.getMessage());
+	        } finally {
+	            manager.close();
+	        }	
+		}
 }
 
 class SftpUserInfo implements UserInfo {
